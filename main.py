@@ -1,3 +1,5 @@
+import tkinter
+from calendar import error
 from ctypes import windll, byref, sizeof, c_int
 import ctypes
 import threading
@@ -56,12 +58,25 @@ def ResetLabels():
 def OpenErrors():
     error_popup = Toplevel(root)
     error_popup.configure(bg="#292929")
-    error_text = "\n".join(all_errors)
-    geometry = 30 * len(all_errors)
-    error_popup.geometry(f"1200x{geometry}")
+    error_popup.geometry("1400x600")
     error_popup.title("List of errors")
-    Label(error_popup, text=error_text, anchor="w", justify="left",bg="#292929", fg="red").grid(column=0, row=0, sticky="w")
-
+    scrollbar = Scrollbar(error_popup)
+    error_text = Listbox(error_popup,
+                      yscrollcommand = scrollbar.set,
+                      justify="left",
+                      bg="#292929",
+                      fg="red",
+                      height=200,
+                      width=600,
+                      selectmode=tk.EXTENDED,
+                     )
+    for i in all_errors:
+        error_text.insert(END, i)
+    scrollbar.pack(side=RIGHT,
+                   fill=Y
+                   )
+    scrollbar.config(command=error_text.yview)
+    error_text.pack()
     WindowCenter(error_popup)
 
 def SetEndLabel(is_single_link):
@@ -98,14 +113,17 @@ class Logger(object):
         print(msg)
 
     def error(self, msg):
+        global correct_download_count
+        msg = msg + " | Index number of bad url: #" + str(correct_download_count + 1)
         all_errors.append(msg)
+
 
 def Download(single_link, file_name, ydl_opts):
     progress.start()
     status_label.config(text="", fg="black")
     if file_name != "":
-        global single_downloads
-        single_downloads = 0
+        # global single_downloads
+        # single_downloads = 0
         is_single_link = False
         with open(file_name, 'r') as file:
             links = [line.strip() for line in file]
@@ -140,7 +158,7 @@ def SetOptions(is_single_link):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'ffmpeg_location': './ffmpeg/bin/ffmpeg.exe',
+            # 'ffmpeg_location': './ffmpeg/bin/ffmpeg.exe',
             'socket_timeout': 1,
             'logger': Logger(),
         }
@@ -153,7 +171,7 @@ def SetOptions(is_single_link):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'ffmpeg_location': './ffmpeg/bin/ffmpeg.exe',
+            # 'ffmpeg_location': './ffmpeg/bin/ffmpeg.exe',
             'socket_timeout': 1,
             'ignoreerrors': True,
             'ignore_no_formats_error': True,
@@ -197,7 +215,6 @@ def BatchLink():
     )
     file_name = fd.askopenfilename(
         title='Open a file',
-        initialdir='/',
         filetypes=filetypes)
     try:
         #disable the buttons to stop impostors
